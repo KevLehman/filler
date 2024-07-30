@@ -1,70 +1,42 @@
-const { MongoClient } = require('mongodb');
-const { faker } = require('@faker-js/faker');
+const {MongoClient} = require('mongodb');
+const fs = require('fs');
+const path = require('path');
 
 const uri = 'mongodb://localhost:3001/';
 //
 const client = new MongoClient(uri);
 
-if (!process.env.USER_ID || !process.env.ROOM_ID || !process.env.USER_NAME) {
-	console.error("Missing env variables");
+if (process.argv.length < 2) {
+	console.error('Missing target collection');
 	process.exit(1);
 }
 
-function generateMessage() {
-	const ts = faker.date.between({
-		from: new Date(process.env.REF_DATE),
-		to: new Date(),
-	});
-	return {
-		_id: faker.git.commitSha({ length: 25 }),
-		rid: process.env.ROOM_ID,
-		ts,
-		msg: faker.lorem.sentence(),
-		u: {
-			_id: process.env.USER_ID,
-			username: process.env.USER_NAME,
-			name: faker.person.firstName(),
-		},
-		_updatedAt: ts,
-		groupable: faker.datatype.boolean(),
-		insertedFromScript: true,
-	}
+const target = process.argv[2];
+
+if (target === 'messages' && (!process.env.USER_ID || !process.env.ROOM_ID || !process.env.USER_NAME)) {
+	console.error('Missing env variables');
+	process.exit(1);
 }
 
 async function fill() {
+	const col = process.argv[2];
 	const db = client.db('meteor');
-	const collection = db.collection('rocketchat_message');
 
-	const bulkOperations = [];
-	const batch = 1000;
-	const totalElements = parseInt(process.env.MESSAGES) || 10000;
-
-	for (let i = 0; i < totalElements; i++) {
-		bulkOperations.push({
-			insertOne: {
-				document: generateMessage(),
-			},
-		});
-		if (bulkOperations.length >= batch) {
-			const r = await collection.bulkWrite(bulkOperations);
-			console.dir({
-				batch: r.insertedCount,
-				total: totalElements,
-				remaining: totalElements - i,
-				ok: r.isOk(),
-				errors: r.hasWriteErrors(),
-				errorList: r.getWriteErrors(),
-			})
-			bulkOperations.length = 0;
-		}
+	const availableFillers = fs.readdirSync(`${__dirname}/fillers`).map(file => path.basename(file, '.js'));
+	if (!availableFillers.includes(col.toLowerCase())) {
+		console.error(`Filler ${col} not found`);
+		process.exit(1);
 	}
+
+	const filler = require(`./fillers/${col}`);
+	return filler(db);
 }
 
 fill()
 	.then(() => {
-		console.log("done");
+		console.log('done');
 		process.exit(0);
 	})
-	.catch((err) => {
+	.catch(err => {
 		console.error(err);
 	});

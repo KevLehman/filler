@@ -15,5 +15,12 @@
   },
   "volta": {
     "node": "18.18.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.1.0",
+    "@eslint/js": "^9.8.0",
+    "eslint": "^9.8.0",
+    "eslint-config-xo": "^0.45.0",
+    "globals": "^15.8.0"
   }
 }
