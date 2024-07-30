@@ -3,8 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const uri = 'mongodb://localhost:3001/';
-//
-const client = new MongoClient(uri);
+const client = new MongoClient(process.env.MONGO_URI || uri);
 
 if (process.argv.length < 2) {
 	console.error('Missing target collection');
@@ -13,7 +12,7 @@ if (process.argv.length < 2) {
 
 async function fill() {
 	const col = process.argv[2];
-	const db = client.db('meteor');
+	const db = client.db(process.env.DB || 'meteor');
 
 	const availableFillers = fs.readdirSync(`${__dirname}/fillers`).map(file => path.basename(file, '.js'));
 	if (!availableFillers.includes(col.toLowerCase())) {

@@ -85,6 +85,7 @@ module.exports = async db => {
 			// eslint-disable-next-line no-await-in-loop
 			const r = await collection.bulkWrite(bulkOperations);
 			console.dir({
+				action: 'users',
 				batch: r.insertedCount,
 				total: totalElements,
 				remaining: totalElements - i,
@@ -99,6 +100,7 @@ module.exports = async db => {
 			// eslint-disable-next-line no-await-in-loop
 			const r = await subs.bulkWrite(subsBulkOperations);
 			console.dir({
+				action: 'subscriptions',
 				batch: r.insertedCount,
 				total: totalElements,
 				remaining: totalElements - i,
