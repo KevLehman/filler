@@ -11,13 +11,6 @@ if (process.argv.length < 2) {
 	process.exit(1);
 }
 
-const target = process.argv[2];
-
-if (target === 'messages' && (!process.env.USER_ID || !process.env.ROOM_ID || !process.env.USER_NAME)) {
-	console.error('Missing env variables');
-	process.exit(1);
-}
-
 async function fill() {
 	const col = process.argv[2];
 	const db = client.db('meteor');
@@ -39,4 +32,5 @@ fill()
 	})
 	.catch(err => {
 		console.error(err);
+		process.exit(1);
 	});

@@ -21,7 +21,14 @@ function generateMessage() {
 	};
 }
 
+function validateEnv() {
+	if ((!process.env.USER_ID || !process.env.ROOM_ID || !process.env.USER_NAME)) {
+		throw new Error('Missing env variables');
+	}
+}
+
 module.exports = async db => {
+	validateEnv();
 	const collection = db.collection('rocketchat_message');
 
 	const bulkOperations = [];
