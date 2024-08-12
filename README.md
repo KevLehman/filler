@@ -20,3 +20,10 @@ USER_NAME=<username you want the messages to be attached to> USER_ID=<same> ROOM
 ```
 node index.js <lowercased filler name>
 ```
+
+# Examples
+
+1. Run `filler` to publish 150K messages on #general channel starting from July 1st, 2024 using `rocketchat.internal.admin.test` as the user.
+```
+REF_DATE="2024-07-01T17:46:26.590Z" USER_ID="rocketchat.internal.admin.test" USER_NAME="rocketchat.internal.admin.test" ROOM_ID="GENERAL" MESSAGES=150000 MONGO_URI=mongodb://localhost:27017/rocket?directConnection=true DB=rocket node index.js messages
+```
