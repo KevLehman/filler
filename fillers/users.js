@@ -95,8 +95,8 @@ module.exports = async db => {
 	}
 
 	await Promise.all([
-		processMissingElements(users, bulkOperations.length, bulkOperations),
-		processMissingElements(subs, subsBulkOperations.length, subsBulkOperations),
+		processMissingElements(users, totalElements, bulkOperations),
+		processMissingElements(subs, totalElements, subsBulkOperations),
 	]);
 };
 

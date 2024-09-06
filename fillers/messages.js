@@ -50,6 +50,6 @@ module.exports = async db => {
 		}
 	}
 
-	processMissingElements(collection, bulkOperations.length, bulkOperations);
+	processMissingElements(collection, totalElements, bulkOperations);
 };
 

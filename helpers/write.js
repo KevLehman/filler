@@ -26,7 +26,8 @@ async function writeBatch(collection, totalElements, docs, currentIterationParam
 
 async function processMissingElements(collection, totalElements, docs) {
 	if (docs.length > 0) {
-		await writeBatch(collection, totalElements, docs);
+		// Infinity is passed here to assure `remaining` will be printed as 0 when this is called
+		await writeBatch(collection, totalElements, docs, Number.POSITIVE_INFINITY);
 	}
 }
 
