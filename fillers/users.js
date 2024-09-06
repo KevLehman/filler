@@ -63,7 +63,7 @@ module.exports = async db => {
 
 	const bulkOperations = [];
 	const subsBulkOperations = [];
-	const batch = 1000;
+	const batch = 10000;
 	const totalElements = parseInt(process.env.USERS, 10) || 100000;
 
 	for (let i = 0; i < totalElements; i++) {
@@ -110,6 +110,34 @@ module.exports = async db => {
 			});
 			subsBulkOperations.length = 0;
 		}
+	}
+
+	if (bulkOperations.length >= 0) {
+		const r = await collection.bulkWrite(bulkOperations);
+		console.dir({
+			action: 'users',
+			batch: r.insertedCount,
+			total: totalElements,
+			remaining: bulkOperations.length,
+			ok: r.isOk(),
+			errors: r.hasWriteErrors(),
+			errorList: r.getWriteErrors(),
+		});
+		bulkOperations.length = 0;
+	}
+
+	if (subsBulkOperations.length >= 0) {
+		const r = await subs.bulkWrite(subsBulkOperations);
+		console.dir({
+			action: 'subscriptions',
+			batch: r.insertedCount,
+			total: totalElements,
+			remaining: subsBulkOperations.length,
+			ok: r.isOk(),
+			errors: r.hasWriteErrors(),
+			errorList: r.getWriteErrors(),
+		});
+		subsBulkOperations.length = 0;
 	}
 };
 
