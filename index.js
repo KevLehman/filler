@@ -21,12 +21,14 @@ async function fill() {
 	}
 
 	const filler = require(`./fillers/${col}`);
+
+	console.log(`Filling ${col}`);
 	return filler(db);
 }
 
 fill()
 	.then(() => {
-		console.log('done');
+		console.log('Done filling');
 		process.exit(0);
 	})
 	.catch(err => {
