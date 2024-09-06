@@ -1,4 +1,5 @@
 const {faker} = require('@faker-js/faker');
+const {writeBatch, processMissingElements} = require('../helpers/write');
 
 function generateUser() {
 	return {
@@ -58,7 +59,7 @@ function generateSubscription(userId, username) {
 }
 
 module.exports = async db => {
-	const collection = db.collection('users');
+	const users = db.collection('users');
 	const subs = db.collection('rocketchat_subscription');
 
 	const bulkOperations = [];
@@ -74,70 +75,28 @@ module.exports = async db => {
 			},
 		});
 
-		const sub = generateSubscription(user._id, user.username);
 		subsBulkOperations.push({
 			insertOne: {
-				document: sub,
+				document: generateSubscription(user._id, user.username),
 			},
 		});
 
 		if (bulkOperations.length >= batch) {
 			// eslint-disable-next-line no-await-in-loop
-			const r = await collection.bulkWrite(bulkOperations);
-			console.dir({
-				action: 'users',
-				batch: r.insertedCount,
-				total: totalElements,
-				remaining: totalElements - i,
-				ok: r.isOk(),
-				errors: r.hasWriteErrors(),
-				errorList: r.getWriteErrors(),
-			});
+			await writeBatch(users, totalElements, bulkOperations, i);
 			bulkOperations.length = 0;
 		}
 
 		if (subsBulkOperations.length >= batch) {
 			// eslint-disable-next-line no-await-in-loop
-			const r = await subs.bulkWrite(subsBulkOperations);
-			console.dir({
-				action: 'subscriptions',
-				batch: r.insertedCount,
-				total: totalElements,
-				remaining: totalElements - i,
-				ok: r.isOk(),
-				errors: r.hasWriteErrors(),
-				errorList: r.getWriteErrors(),
-			});
+			await writeBatch(subs, totalElements, subsBulkOperations, i);
 			subsBulkOperations.length = 0;
 		}
 	}
 
-	if (bulkOperations.length >= 0) {
-		const r = await collection.bulkWrite(bulkOperations);
-		console.dir({
-			action: 'users',
-			batch: r.insertedCount,
-			total: totalElements,
-			remaining: bulkOperations.length,
-			ok: r.isOk(),
-			errors: r.hasWriteErrors(),
-			errorList: r.getWriteErrors(),
-		});
-		bulkOperations.length = 0;
-	}
-
-	if (subsBulkOperations.length >= 0) {
-		const r = await subs.bulkWrite(subsBulkOperations);
-		console.dir({
-			action: 'subscriptions',
-			batch: r.insertedCount,
-			total: totalElements,
-			remaining: subsBulkOperations.length,
-			ok: r.isOk(),
-			errors: r.hasWriteErrors(),
-			errorList: r.getWriteErrors(),
-		});
-		subsBulkOperations.length = 0;
-	}
+	await Promise.all([
+		processMissingElements(users, totalElements, bulkOperations),
+		processMissingElements(subs, totalElements, subsBulkOperations),
+	]);
 };
 

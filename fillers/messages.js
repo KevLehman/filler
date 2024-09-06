@@ -1,4 +1,5 @@
 const {faker} = require('@faker-js/faker');
+const {writeBatch, processMissingElements} = require('../helpers/write');
 
 function generateMessage() {
 	const ts = faker.date.between({
@@ -41,19 +42,14 @@ module.exports = async db => {
 				document: generateMessage(),
 			},
 		});
+
 		if (bulkOperations.length >= batch) {
 			// eslint-disable-next-line no-await-in-loop
-			const r = await collection.bulkWrite(bulkOperations);
-			console.dir({
-				batch: r.insertedCount,
-				total: totalElements,
-				remaining: totalElements - i,
-				ok: r.isOk(),
-				errors: r.hasWriteErrors(),
-				errorList: r.getWriteErrors(),
-			});
+			await writeBatch(collection, totalElements, bulkOperations, i);
 			bulkOperations.length = 0;
 		}
 	}
+
+	processMissingElements(collection, totalElements, bulkOperations);
 };
 
